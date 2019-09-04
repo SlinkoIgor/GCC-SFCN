@@ -67,7 +67,7 @@ def adjust_learning_rate(lr, decay, optimizer, cur_epoch, n_epochs):
 def calculate_mean_iu(predictions, gts, num_classes):
     sum_iu = 0
     class_iu = []
-    for i in xrange(num_classes):
+    for i in range(num_classes):
         n_ii = t_i = sum_n_ji = 1e-9
         for p, gt in zip(predictions, gts):
             n_ii += np.sum(gt[p == i] == i)
@@ -85,7 +85,7 @@ def calculate_lane_metrics(predictions, gts, num_classes):
     acc = []
     rec = []
     f1_m = []
-    for i in xrange(num_classes):
+    for i in range(num_classes):
         tp = fp = fn = 0.
         for p, gt in zip(predictions, gts):
             tp += np.sum(gt[p == i] == i)

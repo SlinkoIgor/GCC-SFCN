@@ -33,9 +33,9 @@ train_record = {'best_mae': 1e20, 'mse':1e20,'corr_loss': 0, 'corr_epoch': -1, '
 
 train_set, train_loader, val_set, val_loader, restore_transform = loading_data()
 
-_t = {'iter time' : Timer(),'train time' : Timer(),'val time' : Timer()} 
+_t = {'iter time' : Timer(),'train time' : Timer(),'val time' : Timer()}
 
-rand_seed = cfg.TRAIN.SEED    
+rand_seed = cfg.TRAIN.SEED
 if rand_seed is not None:
     np.random.seed(rand_seed)
     torch.manual_seed(rand_seed)
@@ -43,31 +43,31 @@ if rand_seed is not None:
 
 def main():
 
-    cfg_file = open('./config.py',"r")  
+    cfg_file = open('./config.py',"r")
     cfg_lines = cfg_file.readlines()
-    
+
     with open(log_txt, 'a') as f:
             f.write(''.join(cfg_lines) + '\n\n\n\n')
     if len(cfg.TRAIN.GPU_ID)==1:
         torch.cuda.set_device(cfg.TRAIN.GPU_ID[0])
     torch.backends.cudnn.benchmark = True
 
-    net = CrowdCounter().cuda()  
+    net = CrowdCounter().cuda()
 
     if cfg.TRAIN.PRE_GCC:
         net.load_state_dict(torch.load(cfg.TRAIN.PRE_GCC_MODEL))
-            
+
     net.train()
     optimizer = optim.Adam(net.parameters(), lr=cfg.TRAIN.LR, weight_decay=1e-4)
     scheduler = StepLR(optimizer, step_size=cfg.TRAIN.NUM_EPOCH_LR_DECAY, gamma=cfg.TRAIN.LR_DECAY)
-    
+
     i_tb = 0
     # validate(val_loader, net, -1, restore_transform)
     for epoch in range(cfg.TRAIN.MAX_EPOCH):
         if epoch > cfg.TRAIN.LR_DECAY_START:
             scheduler.step()
-            
-        # training    
+
+        # training
         _t['train time'].tic()
         i_tb = train(train_loader, net, optimizer, epoch, i_tb)
         _t['train time'].toc(average=False)
@@ -84,7 +84,7 @@ def main():
 
 
 def train(train_loader, net, optimizer, epoch, i_tb):
-    
+
     for i, data in enumerate(train_loader, 0):
         _t['iter time'].tic()
         img, gt_map, gt_cnt = data
@@ -99,7 +99,7 @@ def train(train_loader, net, optimizer, epoch, i_tb):
         pred_map = pred_map/100.
 
         if (i + 1) % cfg.TRAIN.PRINT_FREQ == 0:
-            
+
 
             i_tb = i_tb + 1
             writer.add_scalar('train_loss', loss.data[0], i_tb)
@@ -107,8 +107,8 @@ def train(train_loader, net, optimizer, epoch, i_tb):
             _t['iter time'].toc(average=False)
             print '[ep %d][it %d][loss %.4f][lr %.4f][%.2fs]' % \
                     (epoch + 1, i + 1, loss.data[0], optimizer.param_groups[0]['lr']*10000, _t['iter time'].diff)
-            print '        [cnt: gt: %.1f pred: %.2f]' % (gt_cnt[0], pred_map[0,:,:].sum().data[0])            
-        
+            print '        [cnt: gt: %.1f pred: %.2f]' % (gt_cnt[0], pred_map[0,:,:].sum().data[0])
+
     return i_tb
 
 
@@ -133,8 +133,8 @@ def validate(val_loader, net, epoch, restore):
         pred_map = pred_map.data.cpu().numpy()
         gt_map = gt_map/100.
         gt_map = gt_map.data.cpu().numpy()
-        
-        
+
+
         for i_img in range(pred_map.shape[0]):
 
             pred_cnt_tmp = np.sum(pred_map[i_img])
@@ -142,7 +142,7 @@ def validate(val_loader, net, epoch, restore):
 
             mae += abs(gt_count_tmp-pred_cnt_tmp)
             mse += ((gt_count_tmp-pred_cnt_tmp)*(gt_count_tmp-pred_cnt_tmp))
-        
+
         x = []
         if vi==0:
             for idx, tensor in enumerate(zip(img.cpu().data, pred_map, gt_map)):
@@ -155,7 +155,7 @@ def validate(val_loader, net, epoch, restore):
             x = torch.stack(x, 0)
             x = vutils.make_grid(x, nrow=3, padding=5)
             writer.add_image(exp_name + '_epoch_' + str(epoch+1), (x.numpy()*255).astype(np.uint8))
-        
+
 
     mae = mae/val_set.get_num_samples()
     mse = np.sqrt(mse/val_set.get_num_samples())
@@ -174,7 +174,7 @@ def validate(val_loader, net, epoch, restore):
         train_record['best_mae'] = mae
         train_record['mse'] = mse
         train_record['corr_epoch'] = epoch + 1
-        train_record['corr_loss'] = loss        
+        train_record['corr_loss'] = loss
         train_record['best_model_name'] = snapshot_name
 
         with open(log_txt, 'a') as f:
@@ -191,7 +191,7 @@ def validate(val_loader, net, epoch, restore):
     print '='*50
     print exp_name
     print '    '+ '-'*20
-    print '    [mae %.2f mse %.2f], [val loss %.4f]' % (mae, mse, loss)         
+    print '    [mae %.2f mse %.2f], [val loss %.4f]' % (mae, mse, loss)
     print '    '+ '-'*20
     # pdb.set_trace()
     print '[best] [mae %.2f mse %.2f], [loss %.4f], [epoch %d]' % (train_record['best_mae'], train_record['mse'], train_record['corr_loss'], train_record['corr_epoch'])

@@ -11,7 +11,7 @@ class convDU(nn.Module):
         ):
         super(convDU, self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(in_out_channels, in_out_channels, kernel_size, stride=1, padding=((kernel_size[0]-1)/2,(kernel_size[1]-1)/2)),
+            nn.Conv2d(in_out_channels, in_out_channels, kernel_size, stride=1, padding=((kernel_size[0]-1)//2,(kernel_size[1]-1)//2)),
             nn.ReLU(inplace=True)
             )
 
@@ -19,7 +19,7 @@ class convDU(nn.Module):
         n, c, h, w = fea.size()
 
         fea_stack = []
-        for i in xrange(h):
+        for i in range(h):
             i_fea = fea.select(2, i).resize(n,c,1,w)
             if i == 0:
                 fea_stack.append(i_fea)
@@ -29,7 +29,7 @@ class convDU(nn.Module):
             # fea[:,i,:,:] = self.conv(fea[:,i-1,:,:].expand(n,1,h,w))+fea[:,i,:,:].expand(n,1,h,w)
 
 
-        for i in xrange(h):
+        for i in range(h):
             pos = h-i-1
             if pos == h-1:
                 continue
@@ -46,7 +46,7 @@ class convLR(nn.Module):
         ):
         super(convLR, self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(in_out_channels, in_out_channels, kernel_size, stride=1, padding=((kernel_size[0]-1)/2,(kernel_size[1]-1)/2)),
+            nn.Conv2d(in_out_channels, in_out_channels, kernel_size, stride=1, padding=((kernel_size[0]-1)//2,(kernel_size[1]-1)//2)),
             nn.ReLU(inplace=True)
             )
 
@@ -54,14 +54,14 @@ class convLR(nn.Module):
         n, c, h, w = fea.size()
 
         fea_stack = []
-        for i in xrange(w):
+        for i in range(w):
             i_fea = fea.select(3, i).resize(n,c,h,1)
             if i == 0:
                 fea_stack.append(i_fea)
                 continue
             fea_stack.append(self.conv(fea_stack[i-1])+i_fea)
 
-        for i in xrange(w):
+        for i in range(w):
             pos = w-i-1
             if pos == w-1:
                 continue

@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import pdb
 from config import cfg
 
-from resSFCN import resSFCN as net
+from models.resSFCN import resSFCN as net
 
 class CrowdCounter(nn.Module):
     def __init__(self):
@@ -12,10 +12,10 @@ class CrowdCounter(nn.Module):
         self.CCN = net()
 
         if len(cfg.TRAIN.GPU_ID)>1:
-            self.CCN = torch.nn.DataParallel(self.CCN, device_ids=cfg.TRAIN.GPU_ID).cuda()
+            self.CCN = torch.nn.DataParallel(self.CCN, device_ids=cfg.TRAIN.GPU_ID)
         else:
-            self.CCN=self.CCN.cuda()
-        self.loss_mse_fn = nn.MSELoss().cuda()
+            self.CCN=self.CCN
+        self.loss_mse_fn = nn.MSELoss()
         
     @property
     def loss(self):

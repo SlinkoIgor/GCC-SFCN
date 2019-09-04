@@ -1,14 +1,14 @@
 import torch.nn as nn
 import torch
 from torchvision import models
-from layer import convDU,convLR
+from models.layer import convDU,convLR
 
 import torch.nn.functional as F
 from misc.utils import *
 
 import pdb
 
-model_path = '/media/D/Models/PyTorch_Pretrained/resnet101-5d3b4d8f.pth'
+model_path =  './ThisRepo_mae_99.1_mse_185.4.pth' # '/media/D/Models/PyTorch_Pretrained/resnet101-5d3b4d8f.pth'
 
 class resSFCN(nn.Module):
     def __init__(self, ):
@@ -28,8 +28,8 @@ class resSFCN(nn.Module):
         self._initialize_weights()
 
         res = models.resnet101()
-        pre_wts = torch.load(model_path)
-        res.load_state_dict(pre_wts)
+        pre_wts = torch.load(model_path, map_location=torch.device('cpu'))
+        res.load_state_dict(pre_wts, strict=False)
         self.frontend = nn.Sequential(
             res.conv1, res.bn1, res.relu, res.maxpool, res.layer1, res.layer2
         )
